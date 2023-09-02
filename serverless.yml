@@ -9,6 +9,7 @@ package:
     - ".env.dev"
     - "Readme.md"
     - "test.json"
+    - "ffmpeg-setup.sh"
   excludeDevDependencies: true
 
 plugins:
