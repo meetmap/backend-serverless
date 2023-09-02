@@ -1,0 +1,29 @@
+{
+  "name": "serverless",
+  "version": "1.0.0",
+  "description": "",
+  "main": "a.js",
+  "scripts": {
+    "build": "rimraf dist && tsc",
+    "deploy": "sls deploy --aws-profile d4v1ds0n",
+    "test": "sls invoke local --function",
+    "build-and-deploy": "npm run build && npm run deploy"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@aws-sdk/client-s3": "^3.405.0",
+    "@aws-sdk/lib-storage": "^3.405.0",
+    "@types/aws-lambda": "^8.10.119",
+    "@types/express": "^4.17.17",
+    "@types/fluent-ffmpeg": "^2.1.21",
+    "rimraf": "^5.0.1",
+    "serverless-offline": "^12.0.4",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.2.2"
+  },
+  "dependencies": {
+    "fluent-ffmpeg": "^2.1.2",
+    "sharp": "^0.32.5"
+  }
+}

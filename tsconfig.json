@@ -1,0 +1,20 @@
+{
+  "compilerOptions": {
+    "preserveConstEnums": true,
+    "strictNullChecks": true,
+    "sourceMap": false,
+    "allowJs": true,
+    "target": "ESNext",
+    "strict": true,
+    "skipLibCheck": true,
+    "module": "CommonJS",
+    "outDir": "./dist",
+    "moduleResolution": "node",
+    "rootDir": "./src",
+    "esModuleInterop": true,
+    "baseUrl": "./src",
+    "removeComments": true,
+    "alwaysStrict": true
+  },
+  "include": ["src/**/*"]
+}

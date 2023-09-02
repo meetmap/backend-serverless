@@ -1,0 +1,62 @@
+service: asset-processing
+
+frameworkVersion: "3"
+
+package:
+  exclude:
+    - "src"
+    - "tsconfig.json"
+  excludeDevDependencies: true
+
+plugins:
+  # - serverless-dotenv-plugin
+  - serverless-offline
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  architecture: x86_64
+  region: eu-west-1
+
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - s3:PutObject
+        - s3:GetObject
+      Resource: "arn:aws:s3:::${self:custom.bucket}/*"
+    - Effect: Allow
+      Action:
+        - secretsmanager:GetSecretValue
+      Resource: "arn:aws:secretsmanager:eu-west-1:970180171170:secret:meetmap-backend-secrets-Eu55Og"
+
+functions:
+  process-image-asset:
+    handler: dist/process-assets/index.imageHandler
+    maximumRetryAttempts: 2
+    events:
+      - s3:
+          bucket: ${self:custom.bucket}
+          event: s3:ObjectCreated:*
+          rules:
+            - suffix: "/_original__image"
+          existing: true
+  process-video-asset:
+    handler: dist/process-assets/index.videoHandler
+    memorySize: 2048
+    maximumRetryAttempts: 2
+    layers:
+      - { Ref: FfmpegLambdaLayer }
+    events:
+      - s3:
+          bucket: ${self:custom.bucket}
+          event: s3:ObjectCreated:*
+          rules:
+            - suffix: "/_original__video"
+          existing: true
+
+layers:
+  ffmpeg:
+    path: ffmpeg-layer
+
+custom:
+  bucket: meetmap-assets
