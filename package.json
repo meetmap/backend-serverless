@@ -6,7 +6,7 @@
   "scripts": {
     "build": "rimraf dist && tsc",
     "deploy": "sls deploy --aws-profile d4v1ds0n",
-    "test": "sls invoke local --function",
+    "test": "set -a; source .env.dev; set +a; sls invoke local --function",
     "build-and-deploy": "npm run build && npm run deploy"
   },
   "author": "",

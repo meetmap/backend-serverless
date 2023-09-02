@@ -6,6 +6,9 @@ package:
   exclude:
     - "src"
     - "tsconfig.json"
+    - ".env.dev"
+    - "Readme.md"
+    - "test.json"
   excludeDevDependencies: true
 
 plugins:
@@ -33,6 +36,7 @@ functions:
   process-image-asset:
     handler: dist/process-assets/index.imageHandler
     maximumRetryAttempts: 2
+    timeout: 30
     events:
       - s3:
           bucket: ${self:custom.bucket}
@@ -44,6 +48,7 @@ functions:
     handler: dist/process-assets/index.videoHandler
     memorySize: 2048
     maximumRetryAttempts: 2
+    timeout: 300
     layers:
       - { Ref: FfmpegLambdaLayer }
     events:

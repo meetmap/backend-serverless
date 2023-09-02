@@ -3,9 +3,10 @@ import { Upload } from "@aws-sdk/lib-storage";
 import { PassThrough, Readable, pipeline } from "stream";
 import ffmpeg from "fluent-ffmpeg";
 import sharp from "sharp";
-import { readdir, rm } from "fs/promises";
+import { readdir, rm, mkdtemp } from "fs/promises";
+import { createReadStream } from "fs";
 
-ffmpeg.setFfmpegPath("/opt/ffmpeg/ffmpeg");
+process.env.NODE_ENV !== "development" && ffmpeg.setFfmpegPath("/opt/ffmpeg/ffmpeg");
 export class AssetProcessing {
   private readonly client: S3Client;
 
@@ -149,18 +150,38 @@ export class AssetProcessing {
 
   public async videoProcessingPipline(bucket: string, assetKey: string, outputFolderPath: string) {
     const inputStream = await this.getAssetStream(bucket, assetKey);
-
-    const outputFolder = `/tmp/${outputFolderPath}`;
-    const outputFile = `${outputFolder}/index.mpd`;
-
-    await this.transcodeVideoToProgressive(inputStream, outputFile);
+    console.log("Recieved original");
+    const tempDir = await mkdtemp("/tmp/");
+    console.log({ tempDir });
+    const outputFile = `${tempDir}/index.mpd`;
+    await await this.transcodeVideoToProgressive(inputStream, outputFile);
     console.log("Transcoded to progressive encoding.");
     //read dir and publish
-    const outFiles = await readdir(outputFolder);
+    const outFiles = await readdir(tempDir);
     // await Promise.all()
-    console.log(outFiles.map((file) => file));
+    console.log("Uploading to s3");
+    await Promise.all(
+      outFiles.map(async (fileName) => {
+        const passThrough = new PassThrough();
+        const currentFilePath = `${tempDir}/${fileName}`;
+        const inputStream = createReadStream(currentFilePath);
+        inputStream.pipe(passThrough);
+        const uploader = await this.createStreamUploader(
+          bucket,
+          `${outputFolderPath}/${fileName}`,
+          undefined,
+          passThrough
+        );
+        await uploader.done();
+        await rm(currentFilePath, { recursive: true });
+      })
+    );
+    console.log("Uploaded");
+    // console.log(outFiles.map((file) => file));
     //cleanupDir
-    await rm(outputFolder, { recursive: true });
+    console.log("Cleaning up");
+    await rm(tempDir, { recursive: true });
+    console.log("Cleaned up");
     // await uploader.done();
   }
 
@@ -185,6 +206,7 @@ export class AssetProcessing {
           "-media_seg_name chunk_$RepresentationID$_$Number$.m4s",
           "-hls_playlist 1",
           "-threads 2",
+          "-v 32", ///debug
         ])
         .format("dash")
         .outputOptions([
@@ -202,6 +224,13 @@ export class AssetProcessing {
         .on("end", () => {
           console.log("Conversion complete");
           resolve(null);
+        })
+        //debug
+        .on("codecData", (data) => {
+          console.log("Input is " + data.audio + " audio with " + data.video + " video");
+        })
+        .on("stderr", (stderrLine) => {
+          console.log("Stderr output: " + stderrLine);
         })
         .on("progress", function (progress: any) {
           console.log(`Processing: ${progress.percent}% done`);
