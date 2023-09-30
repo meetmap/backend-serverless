@@ -47,7 +47,7 @@ functions:
           existing: true
   process-video-asset:
     handler: dist/process-assets/index.videoHandler
-    memorySize: 2048
+    memorySize: 5120
     maximumRetryAttempts: 2
     timeout: 300
     layers:

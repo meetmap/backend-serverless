@@ -39,7 +39,7 @@ export const videoHandler = async (event: S3CreateEvent) => {
       return;
     }
     const bucketName = record.s3.bucket.name;
-    const folderPath = objKey.split("/").slice(0, -1).join("/");
+    const folderPath = [...objKey.split("/").slice(0, -1), "abr"].join("/");
     console.log("Processing video");
     await transformer.videoProcessingPipline(bucketName, objKey, folderPath);
   }
